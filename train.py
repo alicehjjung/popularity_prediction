@@ -12,6 +12,9 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 import joblib
+from sklearn.metrics import f1_score,recall_score,precision_score
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 def run_model(model, alg_name, X_train, X_test, y_train, y_test):
    # build the model on training data
@@ -20,6 +23,9 @@ def run_model(model, alg_name, X_train, X_test, y_train, y_test):
    # make predictions for test data
    y_pred = model.predict(X_test)
    # calculate the accuracy score
+   ps=precision_score(y_test,y_pred)
+   rs=recall_score(y_test,y_pred)
+   f1 = f1_score(y_test,y_pred)
    accuracy =  accuracy_score(y_test, y_pred)
    cm = confusion_matrix(y_test, y_pred)
    # cross-validation scores
@@ -28,22 +34,35 @@ def run_model(model, alg_name, X_train, X_test, y_train, y_test):
    results.append((alg_name, accuracy, model))
    print("Model: ", alg_name)
    print("Accuracy on Test Set for {} = {:.2f}\n".format(alg_name, accuracy))
+   print('f1_score:',f1)
+   print('precision:',ps)
+   print('recall:',rs)
    print(Cr)
    print("{}: CrossVal Accuracy Mean: {:.2f} and Standard Deviation: {:.2f} \n".format(alg_name, scoresDT3.mean(), scoresDT3.std()))
-   #joblib.dump(model, f"{alg_name}_model.pkl")
+   #joblib.dump(model, f"final_model2.pkl")
+
+   ft_importance_values = model.feature_importances_
+
+   ft_series = pd.Series(ft_importance_values, index = X_train.columns)
+   ft_top20 = ft_series.sort_values(ascending=False)[:20]
+
+   plt.figure(figsize=(8,6))
+   plt.xlabel('Importance')
+   plt.ylabel('Feature_Name')
+   plt.title('Feature Importance Top 20')
+   sns.barplot(x=ft_top20, y=ft_top20.index)
+   plt.show()
 
 
 if __name__ == "__main__":
 
    scale=False
-   df = pd.read_csv('train.csv')
+   df = pd.read_csv('final_dataset.csv')
    data = df.copy()
    y = data['popularity_level']
-   X = data.drop(columns=['Unnamed: 0','popularity', 'popularity_level'])
-      
-   # Train-Test Split
-   X_train, X_test, y_train, y_test = split(X, y, test_size=0.25, random_state=42)
-
+   X = data.drop(columns=['popularity_level','popularity'])
+   X_train, X_test, y_train, y_test = split(X, y, test_size=0.2, random_state=42)
+   
    results = []
 
    if  scale:
@@ -91,4 +110,3 @@ if __name__ == "__main__":
       '''
       model = RandomForestClassifier(n_estimators=10)
       run_model(model, "Random Forest",X_train, X_test, y_train, y_test)
-
