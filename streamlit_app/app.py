@@ -5,7 +5,7 @@ from streamlit import session_state as state
 from spotify import Spotify
 import random
 import joblib
-from category_encoders import OneHotEncoder
+#from category_encoders import OneHotEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.compose import ColumnTransformer
 import pandas as pd
